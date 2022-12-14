@@ -63,7 +63,7 @@ intended_incumbency_type <- read_excel("data/source/ati-tbs/A-2021-00256 Release
 evaluation_process <- read_excel("data/source/ati-tbs/A-2021-00256 Release package.xlsx", range = "Legend!D10:D64", col_names = c("legend")) %>%
   separate(legend, c("evaluation_process", "evaluation_process_full"), sep = " - ", extra = "merge")
 
-position_classification_authorization <- read_excel("data/source/ati-tbs/A-2021-00256 Release package.xlsx", range = "Legend!E10:E19", col_names = c("legend")) %>%
+position_classification_authorizations <- read_excel("data/source/ati-tbs/A-2021-00256 Release package.xlsx", range = "Legend!E10:E19", col_names = c("legend")) %>%
   separate(legend, c("position_classification_authorization", "position_classification_authorization_full"), sep = " - ", extra = "merge")
 
 position_statuses <- read_excel("data/source/ati-tbs/A-2021-00256 Release package.xlsx", range = "Legend!F10:F11", col_names = c("legend")) %>%
