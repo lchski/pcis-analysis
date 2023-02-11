@@ -1,0 +1,88 @@
+---
+title: "PCIS+ Analysis: Vacancies"
+format:
+  html:
+    df-print: paged
+    self-contained: true
+    prefer-html: true
+---
+
+```{r}
+#| echo: false
+#| output: false
+library(tidyverse)
+library(arrow)
+
+count_prop <- function(df, ...) {
+  df %>%
+    count(...) %>%
+    mutate(prop = round(n / sum(n), 2))
+}
+
+positions <- read_parquet("../data/out/positions.parquet")
+```
+
+How many positions are occupied versus vacant?
+
+```{r}
+#| echo: false
+positions %>%
+  count_prop(position_status)
+```
+
+Which organizations have the highest vacancy rates? (The ones that really need to hire.)
+
+```{r}
+#| echo: false
+positions %>%
+  group_by(organization) %>%
+  count_prop(position_status) %>%
+  ungroup %>%
+  filter(position_status == "Vacant") %>%
+  select(-position_status) %>%
+  slice_max(prop, n = 5)
+```
+
+Which have the lowest? (The ones that are really popular.)
+
+```{r}
+#| echo: false
+positions %>%
+  group_by(organization) %>%
+  count_prop(position_status) %>%
+  ungroup %>%
+  filter(position_status == "Vacant") %>%
+  select(-position_status) %>%
+  slice_min(prop, n = 5)
+```
+
+Removing small organizations, which have the highest vacancy rates?
+
+```{r}
+#| echo: false
+positions %>%
+  filter(org_n_positions > 250) %>%
+  group_by(organization) %>%
+  count_prop(position_status) %>%
+  ungroup %>%
+  filter(position_status == "Vacant") %>%
+  select(-position_status) %>%
+  slice_max(prop, n = 5)
+```
+
+Removing small organizations, which have the lowest?
+
+```{r}
+#| echo: false
+positions %>%
+  filter(org_n_positions > 250) %>%
+  group_by(organization) %>%
+  count_prop(position_status) %>%
+  ungroup %>%
+  filter(position_status == "Vacant") %>%
+  select(-position_status) %>%
+  slice_min(prop, n = 5)
+```
+
+
+...Which departments (directorates?), classifications, levels have more vacant positions?
