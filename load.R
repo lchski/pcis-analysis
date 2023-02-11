@@ -2,12 +2,15 @@ library(tidyverse)
 library(readxl)
 library(janitor)
 library(lubridate)
+library(arrow)
 
 count_prop <- function(df, ...) {
   df %>%
     count(...) %>%
     mutate(prop = round(n / sum(n), 2))
 }
+
+# TODO: when loading from full, manually set column types in read_excel, erring on "character" to preserve leading zeroes etc (especially for variables in legend)
 
 pipsc_positions_raw <- read_excel("data/source/ati-tbs/A-2022-00110 Release package.xlsx") %>%
   clean_names() %>%
@@ -85,3 +88,23 @@ positions <- bind_rows(
   ) %>%
   extract(position_classification_code, into = c("group", "level"), regex = "([A-Z]*)[^[:alnum:]]*([0-9]*)", remove = FALSE, convert = TRUE) %>%
   extract(supervisors_position_classification_code, into = c("supervisor_group", "supervisor_level"), regex = "([A-Z]*)[^[:alnum:]]*([0-9]*)", remove = FALSE, convert = TRUE)
+
+# TODO:
+# - consider binning by n (i.e., "we want 5 bins, make them the size that works")
+# - consider binning just on filled positions (how many vacant positions are... extra?)
+# - consider adding a break at 5000
+orgs_by_bin <- positions %>%
+  count(organization, name = "org_n_positions") %>%
+  mutate(
+    all_positions_bin = cut(
+      org_n_positions,
+      breaks = c(0, 50, 250, 1000, 10000, Inf),
+      labels = c("Micro (0-50)", "Small (51-250)", "Medium (251-1000)", "Large (1,001-5,000)", "Very Large (10,001+)")
+    )
+  )
+
+positions <- positions %>%
+  select(source:organization) %>%
+  left_join(orgs_by_bin, by = c("organization"))
+
+positions %>% write_parquet("data/out/positions.parquet")
