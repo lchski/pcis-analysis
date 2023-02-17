@@ -84,7 +84,7 @@ positions %>%
 Discrepancies can be simplified as “counting people is hard”. To go one level deeper, though:
 
 - how quickly position data are updated in PCIS+ versus reality is unclear, and some people may be double counted (or a position classified as “occupied” even while its occupant is on long-term leave, which wouldn’t count in other data on employee numbers)
-- [public data on employee numbers based on pay system data](https://www.canada.ca/en/treasury-board-secretariat/services/innovation/human-resources-statistics/population-federal-public-service-department.html) tends to be as of March 31, while the PCIS+ export powering this analysis is from around November 2022—there’s definitely seasonal variation in public service employment, depending on the organization, as well as general change over time
+- [public data on employee numbers based on pay system data](https://www.canada.ca/en/treasury-board-secretariat/services/innovation/human-resources-statistics/population-federal-public-service-department.html) tends to be as of March 31, while the PCIS+ export powering this analysis is from November 21, 2022—there’s definitely seasonal variation in public service employment, depending on the organization, as well as general change over time
 - these are headcounts, not full-time equivalent (FTE) counts—some (sometimes many, depending on the department) positions are part-time positions, often for seasonal posts, so while these count as 1 position, they may only be 0.3 FTE
 
 So, with those caveats aside—let’s explore the data!
