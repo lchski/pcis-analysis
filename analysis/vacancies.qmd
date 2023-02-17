@@ -20,6 +20,7 @@ count_prop <- function(df, ...) {
 }
 
 positions <- read_parquet("../data/out/positions.parquet")
+positions_binned <- read_parquet("../data/out/positions-binned.parquet")
 ```
 
 How many positions are occupied versus vacant?
@@ -60,7 +61,7 @@ Removing small organizations, which have the highest vacancy rates?
 
 ```{r}
 #| echo: false
-positions %>%
+positions_binned %>%
   filter(org_n_positions > 250) %>%
   group_by(organization) %>%
   count_prop(position_status) %>%
@@ -74,7 +75,7 @@ Removing small organizations, which have the lowest?
 
 ```{r}
 #| echo: false
-positions %>%
+positions_binned %>%
   filter(org_n_positions > 250) %>%
   group_by(organization) %>%
   count_prop(position_status) %>%

@@ -1,0 +1,133 @@
+---
+title: "PCIS+ Analysis: Distributions and counts"
+format:
+  html:
+    df-print: paged
+    self-contained: true
+    prefer-html: true
+---
+
+```{r}
+#| echo: false
+#| output: false
+library(tidyverse)
+library(arrow)
+
+fmt_comma <- scales::label_comma(accuracy = 1)
+fmt_percent <- scales::label_percent()
+
+count_prop <- function(df, ...) {
+  df %>%
+    count(...) %>%
+    mutate(prop = round(n / sum(n), 2))
+}
+
+fmt_count_prop <- function(df) {
+  df %>%
+    mutate(
+      n = fmt_comma(n),
+      prop = fmt_percent(prop)
+    )
+}
+
+positions <- read_parquet("../data/out/positions.parquet")
+positions_binned <- read_parquet("../data/out/positions-binned.parquet")
+
+positions_n_organizations <- positions %>% distinct(organization) %>% pull %>% length
+```
+
+There are `r positions %>% count %>% pull %>% fmt_comma` positions (better known as “boxes”) across `r positions_n_organizations` organizations (which I’ll sometimes call “departments”, even if that’s not quite accurate) in the PCIS+ database. Here’s how they break down between “occupied”—i.e., a real person has the position (sits in the box, to carry on with the metaphor)—and vacant:
+
+```{r}
+#| echo: false
+positions %>%
+  count_prop(position_status) %>%
+  fmt_count_prop
+```
+
+How does this break across departments? Which departments have the most?
+
+```{r}
+#| echo: false
+positions %>%
+  count_prop(organization) %>%
+  arrange(-n) %>%
+  fmt_count_prop
+```
+
+And the least?
+
+```{r}
+#| echo: false
+positions %>%
+  count_prop(organization) %>%
+  arrange(n) %>%
+  fmt_count_prop
+```
+
+Depending on how closely you follow federal public administrivia, the counts for the largest departments may surprise you, versus [their actual sizes in terms of headcount](https://www.canada.ca/en/treasury-board-secretariat/services/innovation/human-resources-statistics/population-federal-public-service-department.html)—these reveal some important characteristics of this dataset to keep in mind when using it for analysis:
+
+- PCIS+ tracks the number of _boxes_ a department has created—oftentimes, a department will have many more (up to 50% more, from a quick scan of the data) positions than they will people; this isn’t necessarily an indication of how large a department plans to grow, so much as a reflection of incentives in HR policy and processes (to vastly oversimplify, it’s a lot of work to classify a position, so it’s easier to keep it around than to cut out unused boxes)
+- PCIS+ only includes positions in [the core public administration—i.e., organizations with the Treasury Board as the employer](https://www.canada.ca/en/public-service-commission/services/public-service-hiring-guides/information-staffing-obligations.html)—significant organizations like the Canada Revenue Agency, as well as, e.g., service personnel in the Armed Forces and the RCMP, are not included
+
+If we instead focus on _occupied_ positions (i.e., the number of people, roughly), the figures get closer to what we find elsewhere:
+
+```{r}
+#| echo: false
+positions %>%
+  filter(position_status == "Occupied") %>%
+  count_prop(organization) %>%
+  arrange(-n) %>%
+  fmt_count_prop
+```
+
+Discrepancies can be simplified as “counting people is hard”. To go one level deeper, though:
+
+- how quickly position data are updated in PCIS+ versus reality is unclear, and some people may be double counted (or a position classified as “occupied” even while its occupant is on long-term leave, which wouldn’t count in other data on employee numbers)
+- [public data on employee numbers based on pay system data](https://www.canada.ca/en/treasury-board-secretariat/services/innovation/human-resources-statistics/population-federal-public-service-department.html) tends to be as of March 31, while the PCIS+ export powering this analysis is from around November 2022—there’s definitely seasonal variation in public service employment, depending on the organization, as well as general change over time
+- these are headcounts, not full-time equivalent (FTE) counts—some (sometimes many, depending on the department) positions are part-time positions, often for seasonal posts, so while these count as 1 position, they may only be 0.3 FTE
+
+So, with those caveats aside—let’s explore the data!
+
+
+
+## Classification groups, generic and specific
+
+```{r}
+#| echo: false
+#| output: false
+classification_group_counts <- positions %>%
+  group_by(group, group_label) %>%
+  summarize(
+    n_positions = n(),
+    n_organizations = n_distinct(organization)
+  ) %>%
+  ungroup
+```
+
+Across the positions, there are some `r classification_group_counts %>% nrow %>% fmt_comma` different classification groups.
+
+Some groups are very common, appearing in most departments—we’ll call them “generic”:
+
+```{r}
+#| echo: false
+classification_group_counts %>%
+  slice_max(n_organizations, n = 10) %>%
+  arrange(-n_organizations, -n_positions)
+```
+
+From this, we see that AS, EX, and IT are the most common groups, found in almost every organization.
+
+Some, on the other hand, are very rare, appearing in fewer than 25% of departments (`r floor(0.25 * positions_n_organizations)`)—we’ll call them “specific”:
+
+```{r}
+#| echo: false
+classification_group_counts %>%
+  filter(n_organizations < (0.25 * positions_n_organizations)) %>%
+  slice_min(n_organizations, n = 10) %>%
+  arrange(n_organizations, -n_positions)
+```
+
+These include a number of groups that appear only in one department—Border Services and Correctional Services groups, for example, are only found in CBSA and CSC respectively.
+
+...which organizations have the highest number of specific groups? (probably DND—firefighting, defense science, teaching, etc) what's the largest organization to have only generic groups? (maybe we should redefine generic groups)
