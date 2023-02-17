@@ -8,6 +8,7 @@
   - How many multidisciplinary reporting relationships exist? Does like group tend to report to like group?
 - Org chart? How flat (or not) are different organizations?
 - How do some of these questions break down geographically? How much potential for advancement (higher salaries) exist in the regions, versus the NCR?
+- Classification distribution? Which classifications are entirely or mostly associated with only some departments?
 
 NB: For most, probably best to focus on "Occupied" positions only—as many "Vacant" positions may just be placeholders. (Would be good to surface some of the dynamics of classification etc that cause this.)
 
