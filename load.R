@@ -81,7 +81,15 @@ positions <- positions_raw %>%
   ) %>%
   extract(position_classification_code, into = c("group", "level"), regex = "([A-Z]*)[^[:alnum:]]*([0-9]*)", remove = FALSE, convert = TRUE) %>%
   extract(supervisors_position_classification_code, into = c("supervisor_group", "supervisor_level"), regex = "([A-Z]*)[^[:alnum:]]*([0-9]*)", remove = FALSE, convert = TRUE) %>%
-  left_join(group_labels)
+  left_join(group_labels) %>%
+  left_join(intended_incumbency_type) %>%
+  left_join(evaluation_process %>%
+              mutate(evaluation_process = as.character(as.integer(evaluation_process)))
+  ) %>%
+  left_join(position_classification_authorizations) %>%
+  left_join(reasons_for_classification_decision)
+
+positions %>% write_parquet("data/out/positions.parquet")
 
 # TODO:
 # - consider binning by n (i.e., "we want 5 bins, make them the size that works")
@@ -97,8 +105,8 @@ orgs_by_bin <- positions %>%
     )
   )
 
-positions <- positions %>%
-  select(source:organization) %>%
+positions_binned <- positions %>%
+  select(organization_code:organization) %>%
   left_join(orgs_by_bin, by = c("organization"))
 
-positions %>% write_parquet("data/out/positions.parquet")
+positions_binned %>% write_parquet("data/out/positions-binned.parquet")
