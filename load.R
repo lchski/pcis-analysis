@@ -40,43 +40,6 @@ positions_raw <- read_excel("data/source/ati-tbs/A-2022-01431 records.xlsx") %>%
     )
   )
 
-pipsc_positions_raw <- read_excel("data/source/ati-tbs/A-2022-00110 Release package.xlsx") %>%
-  clean_names() %>%
-  mutate(
-    across(
-      c(
-        position_number,
-        geographic_location_code,
-        supervisors_position_number,
-        evaluation_process,
-        position_classification_authorization,
-        national_occupational_classification_noc_code
-      ),
-      as.character
-    ),
-    across(
-      starts_with("degree"),
-      as.character
-    ),
-    across(
-      starts_with("points"),
-      as.character
-    ),
-    across(
-      contains("date"),
-      as_date
-    )
-  )
-  
-psac_positions_raw <- read_excel("data/source/ati-tbs/A-2021-00256 Release package.xlsx", sheet = "Position Data") %>% clean_names() %>%
-  select(organization_code:rejected_position) %>% # remove long tail of empty columns
-  mutate(
-    across(
-      contains("date"),
-      as_date
-    )
-  )
-
 
 organization_codes <- read_excel("data/source/ati-tbs/A-2022-01430 Database schema of the Position Classification Information System.xlsx", range = "Legend!A10:A78", col_names = c("legend")) %>%
   separate(legend, c("organization_code", "organization"), sep = " - ", extra = "merge")
@@ -109,23 +72,6 @@ noc_2016 <- read_excel("data/source/ati-tbs/A-2022-01430 Database schema of the 
 
 noc_2021 <- read_excel("data/source/ati-tbs/A-2022-01430 Database schema of the Position Classification Information System.xlsx", range = "Legend!J9:J524", col_names = c("legend")) %>%
   separate(legend, c("noc_2021", "noc_2021_full"), sep = " - ", extra = "merge")
-
-
-positions_pipsc_psac <- bind_rows(
-  list(
-    "pipsc (A-2022-00110)" = pipsc_positions_raw,
-    "psac (A-2021-00256)" = psac_positions_raw
-  ),
-  .id = "source"
-) %>%
-  select(-degree_1:-points_16) %>% # TODO: recode various fields based on A-2021-00256 legend
-  left_join(organization_codes) %>%
-  mutate(
-    position_status = str_replace_all(position_status, position_statuses %>% deframe)
-  ) %>%
-  extract(position_classification_code, into = c("group", "level"), regex = "([A-Z]*)[^[:alnum:]]*([0-9]*)", remove = FALSE, convert = TRUE) %>%
-  extract(supervisors_position_classification_code, into = c("supervisor_group", "supervisor_level"), regex = "([A-Z]*)[^[:alnum:]]*([0-9]*)", remove = FALSE, convert = TRUE)
-
 
 positions <- positions_raw %>%
   select(-degree_1:-points_16) %>% # TODO: recode various fields based on A-2021-00256 legend
