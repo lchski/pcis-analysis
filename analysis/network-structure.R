@@ -3,6 +3,8 @@ library(ggraph)
 library(ggiraph)
 library(visNetwork)
 
+
+# TODO: to run this on whole dataset, remap position_ids to be globally unique (prefix with department code)
 cic_positions <- positions %>%
   filter(organization_code == "CIC") %>%
   mutate(node_id = row_number())
