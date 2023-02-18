@@ -6,8 +6,45 @@ library(visNetwork)
 
 # NB: ATSSC, CSA (Space!), Stats, and Transport are all missing position IDs and supervisor position IDs (more or less)
 #     This means they're not suitable for network analysis.
-position_nodes <- positions %>%
+position_nodes_raw <- positions %>%
   filter(! is.na(position_number) & ! is.na(supervisors_position_number)) %>%
+  mutate(
+    position_gid = str_glue("{organization_code}-{position_number}"),
+    supervisor_gid = str_glue("{organization_code}-{supervisors_position_number}")
+  )
+
+# NB: we do this to fill in the graph, but it's arguably relevant in other analyses and could go to `load.R`, even if missing various data
+inferred_position_nodes <- position_nodes_raw %>%
+  select(
+    supervisor_gid,
+    supervisors_position_number,
+    supervisors_position_classification_code,
+    supervisor_group,
+    supervisor_level,
+    organization_code,
+    organization,
+    branch_directorate_division # TBD if there are any other fields we could include—even this is maybe a stretch (wewe )
+  ) %>%
+  anti_join(
+    position_nodes_raw %>%
+      select(position_gid, position_classification_code),
+    by = c(
+      "supervisor_gid" = "position_gid"
+      # "supervisors_position_classification_code" = "position_classification_code" # NB: this line creates a small number of duplicate positions, where the supervisor's position already exists but the recorded supervisor group/level differs from the existing position
+    )
+  ) %>%
+  mutate(position_title_english = "Unknown") %>%
+  rename(
+    position_gid = supervisor_gid,
+    position_number = supervisors_position_number,
+    position_classification_code = supervisors_position_classification_code,
+    group = supervisor_group,
+    level = supervisor_level
+  ) %>%
+  distinct(position_gid, .keep_all = TRUE)
+
+position_nodes <- position_nodes_raw %>%
+  bind_rows(inferred_position_nodes) %>%
   mutate(
     node_id = row_number()
   ) %>%
@@ -15,13 +52,8 @@ position_nodes <- positions %>%
   mutate(
     org_node_id = row_number()
   ) %>%
-  ungroup %>%
-  mutate(
-    position_gid = str_glue("{organization_code}-{position_number}"),
-    supervisor_gid = str_glue("{organization_code}-{supervisors_position_number}")
-  )
+  ungroup
 
-# TODO: where a supervisor's position doesn't exist (is.na(to)), create that position manually?
 position_edges <- position_nodes %>%
   select(
     position_gid,
@@ -40,7 +72,7 @@ position_edges <- position_nodes %>%
 positions_graph <- tbl_graph(
   nodes = position_nodes,
   edges = position_edges %>%
-    filter(! is.na(from) & ! is.na(to)) # TODO: need to account for situations where a supervisor ID doesn't correspond; create IDs manually
+    filter(! is.na(from) & ! is.na(to))
 ) %>%
   mutate(
     reports_direct = local_size(mindist = 1, mode = "in"),
