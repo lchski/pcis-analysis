@@ -73,6 +73,8 @@ noc_2016 <- read_excel("data/source/ati-tbs/A-2022-01430 Database schema of the 
 noc_2021 <- read_excel("data/source/ati-tbs/A-2022-01430 Database schema of the Position Classification Information System.xlsx", range = "Legend!J9:J524", col_names = c("legend")) %>%
   separate(legend, c("noc_2021", "noc_2021_full"), sep = " - ", extra = "merge")
 
+source("load/pay.R")
+
 positions <- positions_raw %>%
   select(-degree_1:-points_16) %>% # TODO: recode various fields based on A-2021-00256 legend
   left_join(organization_codes) %>%
@@ -87,7 +89,11 @@ positions <- positions_raw %>%
               mutate(evaluation_process = as.character(as.integer(evaluation_process)))
   ) %>%
   left_join(position_classification_authorizations) %>%
-  left_join(reasons_for_classification_decision)
+  left_join(reasons_for_classification_decision) %>%
+  left_join(
+    core_pay_rates %>%
+      select(group, level, pay_max)
+  )
 
 positions %>% write_parquet("data/out/positions.parquet")
 
@@ -110,3 +116,6 @@ positions_binned <- positions %>%
   left_join(orgs_by_bin, by = c("organization"))
 
 positions_binned %>% write_parquet("data/out/positions-binned.parquet")
+
+positions <- read_parquet("data/out/positions.parquet")
+positions_binned <- read_parquet("data/out/positions-binned.parquet")
