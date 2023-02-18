@@ -82,17 +82,29 @@ positions_graph <- tbl_graph(
   )
 
 
+## exploration
+
+### understand how many different trees there are in an org
+### more trees = likely more created / inferred positions, or broken reporting chains
+### NB: makes sense that DND and RCMP are so many, since their positions would include RMs / CAF that aren't stored in PCIS
+positions_graph %>%
+  filter(ranks_from_top == 0) %>%
+  as_tibble %>%
+  count(organization, sort = TRUE)
+
 ## analysis
 
 ### study a particular organization
 positions_graph %>%
-  filter(organization_code == "TBD") %>%
+  filter(organization_code == "IMC") %>%
   select(
     position_gid,
     grp_lvl = position_classification_code,
+    branch_directorate_division,
     position_title_english,
     sup_pos_gid = supervisor_gid,
     sup_grp_lvl = supervisors_position_classification_code,
+    position_status,
     reports_direct:last_col()
   ) %>%
   as_tibble %>% View
@@ -105,12 +117,33 @@ positions_graph %>%
   select(
     position_gid,
     grp_lvl = position_classification_code,
+    branch_directorate_division,
     position_title_english,
     sup_pos_gid = supervisor_gid,
     sup_grp_lvl = supervisors_position_classification_code,
+    position_status,
     reports_direct:last_col()
   ) %>%
   as_tibble %>% View()
+
+positions_graph %>%
+  as_tibble %>%
+  group_by(
+    # is_central_agency = organization_code %in% c("PCO", "TBD", "FIN"), # or other axis of interest, e.g., NCR vs not
+    is_ncr = work_location_english %in% c("Ottawa", "Gatineau"),
+    grp_lvl = position_classification_code
+  ) %>%
+  summarize(
+    count = n(),
+    max_direct = max(reports_direct),
+    min_direct = min(reports_direct),
+    avg_direct = mean(reports_direct),
+    max_indirect = max(reports_indirect),
+    min_indirect = min(reports_indirect),
+    avg_indirect = mean(reports_indirect)
+  ) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 1))) %>%
+  arrange(grp_lvl)
 
 ### look at CDS (because it's what I know)
 positions_graph %>%
