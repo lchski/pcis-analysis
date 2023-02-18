@@ -1,8 +1,52 @@
 library(tidygraph)
+
 library(ggraph)
 library(ggiraph)
 library(visNetwork)
 
+# NB: ATSSC, CSA (Space!), Stats, and Transport are all missing position IDs and supervisor position IDs (more or less)
+#     This means they're not suitable for network analysis.
+position_nodes <- positions %>%
+  filter(! is.na(position_number) & ! is.na(supervisors_position_number)) %>%
+  mutate(
+    node_id = row_number()
+  ) %>%
+  group_by(organization) %>%
+  mutate(
+    org_node_id = row_number()
+  ) %>%
+  ungroup %>%
+  mutate(
+    position_gid = str_glue("{organization_code}-{position_number}"),
+    supervisor_gid = str_glue("{organization_code}-{supervisors_position_number}")
+  )
+
+position_edges <- position_nodes %>%
+  select(
+    position_gid,
+    supervisor_gid
+  ) %>%
+  left_join(
+    position_nodes %>%
+      select(position_gid, from = node_id)
+  ) %>%
+  left_join(
+    position_nodes %>%
+      select(position_gid, to = node_id),
+    by = c("supervisor_gid" = "position_gid")
+  )
+
+positions_graph <- tbl_graph(
+  nodes = position_nodes,
+  edges = position_edges %>%
+    filter(! is.na(from) & ! is.na(to)) # TODO: need to account for situations where a supervisor ID doesn't correspond; create IDs manually
+) %>%
+  mutate(
+    reports_direct = local_size(mindist = 1, mode = "in"),
+    reports_indirect = local_size(order = nrow(cic_positions), mindist = 1, mode = "in"),
+    ranks_from_top = node_eccentricity(mode = "out"),
+    is_isolated = node_is_isolated()
+  )
 
 # TODO: to run this on whole dataset, remap position_ids to be globally unique (prefix with department code)
 cic_positions <- positions %>%
@@ -29,19 +73,20 @@ cic_positions_graph <- tbl_graph(
   nodes = cic_positions,
   edges = cic_position_edges %>%
     filter(! is.na(from) & ! is.na(to)) # need to account for situations where a supervisor ID doesn't correspond
-)
-
-
-## analysis
-
-cic_positions_graph %>%
+) %>%
   activate(nodes) %>%
   mutate(
     reports_direct = local_size(mindist = 1, mode = "in"),
     reports_indirect = local_size(order = nrow(cic_positions), mindist = 1, mode = "in"),
-    ranks_from_top = node_eccentricity(mode = "out")
-  ) %>%
-  select(position_number, sup_pos_num = supervisors_position_number, sup_grp_lvl = supervisors_position_classification_code, position_title_english, reports_direct:ranks_from_top) %>%
+    ranks_from_top = node_eccentricity(mode = "out"),
+    is_isolated = node_is_isolated()
+  )
+
+
+## analysis
+
+positions_graph %>%
+  select(position_gid, sup_pos_num = supervisor_gid, sup_grp_lvl = supervisors_position_classification_code, position_title_english, reports_direct:ranks_from_top) %>%
   as_tibble %>% View
 
 
