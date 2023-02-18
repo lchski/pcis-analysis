@@ -7,7 +7,7 @@
   - Which group / levels are more or less likely to have supervisory responsibilities? How many people supervised (direct and indirect)?
   - How many multidisciplinary reporting relationships exist? Does like group tend to report to like group?
 - Org chart? How flat (or not) are different organizations?
-- How do some of these questions break down geographically? How much potential for advancement (higher salaries) exist in the regions, versus the NCR?
+- How do some of these questions break down geographically? How much potential for advancement (higher salaries) exist in the regions, versus the NCR? As individual contributors vs as a supervisor?
 - Classification distribution? Which classifications are entirely or mostly associated with only some departments?
 
 - interdisciplinary teams, multidisciplinary teams: are most teams by classification, or are they mixed? which classifications are more often mixed than not?
@@ -16,6 +16,9 @@
 - variation in titles versus group / levels—e.g., what's a "Director" (often abbreviated to "Dir" in data) in different spots?
 
 NB: For most, probably best to focus on "Occupied" positions only—as many "Vacant" positions may just be placeholders. (Would be good to surface some of the dynamics of classification etc that cause this.)
+
+...cleaning todos:
+- remap CS as IT
 
 ## Source ATI requests
 
