@@ -75,10 +75,12 @@ positions_graph <- tbl_graph(
     filter(! is.na(from) & ! is.na(to))
 ) %>%
   mutate(
+    reports_total = local_size(order = nrow(position_nodes), mindist = 1, mode = "in"),
     reports_direct = local_size(mindist = 1, mode = "in"),
-    reports_indirect = local_size(order = nrow(position_nodes), mindist = 1, mode = "in"),
+    reports_indirect = reports_total - reports_direct,
     ranks_from_top = node_eccentricity(mode = "out"),
-    is_isolated = node_is_isolated()
+    is_supervisor = reports_total > 0,
+    is_isolated = node_is_isolated() # TODO: replace this? it's basically `ranks_from_top == 0` that interests us, maybe we just drop
   )
 
 
@@ -126,6 +128,7 @@ positions_graph %>%
   ) %>%
   as_tibble %>% View()
 
+### reporting responsibilities
 positions_graph %>%
   as_tibble %>%
   group_by(
@@ -144,6 +147,13 @@ positions_graph %>%
   ) %>%
   mutate(across(where(is.numeric), ~ round(.x, 1))) %>%
   arrange(grp_lvl)
+
+### accuracy of supervisory factor code, vs classified org chart?
+### verdict: `supervisory_factor_code` seems barely used
+positions_graph %>%
+  as_tibble %>%
+  group_by(is_supervisor) %>%
+  count_prop(supervisory_factor_code)
 
 ### look at CDS (because it's what I know)
 positions_graph %>%
