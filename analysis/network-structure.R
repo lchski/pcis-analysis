@@ -21,6 +21,7 @@ position_nodes <- positions %>%
     supervisor_gid = str_glue("{organization_code}-{supervisors_position_number}")
   )
 
+# TODO: where a supervisor's position doesn't exist (is.na(to)), create that position manually?
 position_edges <- position_nodes %>%
   select(
     position_gid,
@@ -41,40 +42,6 @@ positions_graph <- tbl_graph(
   edges = position_edges %>%
     filter(! is.na(from) & ! is.na(to)) # TODO: need to account for situations where a supervisor ID doesn't correspond; create IDs manually
 ) %>%
-  mutate(
-    reports_direct = local_size(mindist = 1, mode = "in"),
-    reports_indirect = local_size(order = nrow(cic_positions), mindist = 1, mode = "in"),
-    ranks_from_top = node_eccentricity(mode = "out"),
-    is_isolated = node_is_isolated()
-  )
-
-# TODO: to run this on whole dataset, remap position_ids to be globally unique (prefix with department code)
-cic_positions <- positions %>%
-  filter(organization_code == "CIC") %>%
-  mutate(node_id = row_number())
-
-# TODO: where a supervisor's position doesn't exist (is.na(to)), create that position manually?
-cic_position_edges <- cic_positions %>%
-  select(
-    position_number,
-    supervisors_position_number
-  ) %>%
-  left_join(
-    cic_positions %>%
-      select(position_number, from = node_id)
-  ) %>%
-  left_join(
-    cic_positions %>%
-      select(position_number, to = node_id),
-    by = c("supervisors_position_number" = "position_number")
-  )
-
-cic_positions_graph <- tbl_graph(
-  nodes = cic_positions,
-  edges = cic_position_edges %>%
-    filter(! is.na(from) & ! is.na(to)) # need to account for situations where a supervisor ID doesn't correspond
-) %>%
-  activate(nodes) %>%
   mutate(
     reports_direct = local_size(mindist = 1, mode = "in"),
     reports_indirect = local_size(order = nrow(cic_positions), mindist = 1, mode = "in"),
