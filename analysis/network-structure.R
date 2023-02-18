@@ -130,7 +130,8 @@ positions_graph %>%
   geom_point_interactive(aes(
     x = x,
     y = y,
-    tooltip = str_glue("{position_title_english} ({group}-{level})\nPosition ID: {position_number}\nReports to: {supervisors_position_number}")
+    tooltip = str_glue("{position_title_english} ({group}-{level})\nPosition ID: {position_number}\nReports to: {supervisors_position_number}"),
+    color = position_status
   ))
 ) %>%
   girafe(
