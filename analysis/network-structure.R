@@ -44,7 +44,7 @@ positions_graph <- tbl_graph(
 ) %>%
   mutate(
     reports_direct = local_size(mindist = 1, mode = "in"),
-    reports_indirect = local_size(order = nrow(cic_positions), mindist = 1, mode = "in"),
+    reports_indirect = local_size(order = nrow(position_nodes), mindist = 1, mode = "in"),
     ranks_from_top = node_eccentricity(mode = "out"),
     is_isolated = node_is_isolated()
   )
@@ -82,11 +82,15 @@ positions_graph %>%
 
 
 ## visualization
+## NB: don't try to run on whole graph... unless you want to stress your computer
 
-plot(cic_positions_graph)
+positions_graph %>%
+  filter(organization_code == "CIC") %>%
+  plot()
 
-(cic_positions_graph %>%
-  ggraph("igraph", algorithm = "kk") + # stress tree igraph[algorithm = "nicely"] igraph[algorithm = "sugiyama"] igraph[algorithm = "fr"] igraph[algorithm = "kk"]    
+(positions_graph %>%
+  filter(organization_code == "CIC") %>%
+  ggraph("igraph", algorithm = "kk") + # other layouts of note: stress tree igraph[algorithm = "nicely"] igraph[algorithm = "sugiyama"] igraph[algorithm = "fr"] igraph[algorithm = "kk"]    
   geom_edge_link(
     arrow = grid::arrow(type = "open", length = unit(9, "points"), angle = 7)
   ) +
@@ -102,13 +106,14 @@ plot(cic_positions_graph)
     options = list(opts_sizing(rescale = FALSE))
   )
 
-vis_data <- toVisNetworkData(cic_positions_graph)
+vis_data <- positions_graph %>%
+  filter(organization_code == "CIC") %>%
+  toVisNetworkData()
 
 visNetwork(
   nodes = vis_data$nodes %>%
     mutate(title = str_glue("{position_title_english} ({group}-{level})\nPosition ID: {position_number}\nReports to: {supervisors_position_number}")),
   edges = vis_data$edges,
-  main = cic_positions %>% distinct(organization) %>% pull,
   width = "100%"
 ) %>%
   visIgraphLayout() %>%
@@ -121,6 +126,7 @@ visNetwork(
     dragNodes = FALSE
   )
 
-cic_positions_graph %>%
+positions_graph %>%
+  filter(organization_code == "CIC") %>%
   visIgraph()
 
