@@ -112,16 +112,24 @@ positions_graph %>%
   ) %>%
   as_tibble %>% View()
 
+### look at CDS (because it's what I know)
+positions_graph %>%
+  mutate(distance_to_position_of_interest = node_distance_to(position_gid == "TBD-2986")) %>%
+  filter(distance_to_position_of_interest != Inf | branch_directorate_division == "Canadian Digital Ser")
+#### what can we observe? that there are clearly some broken links in the chain: sometimes you can go by shared root node, but sometimes there are positions with the same branch/dir/div that are floating
+
 
 ## visualization
 ## NB: don't try to run on whole graph... unless you want to stress your computer
+##     works best for orgs / clusters roughly <600
+##     now if we could get a dynamic / zooming visualization...
 
 positions_graph %>%
   filter(organization_code == "CIC") %>%
   plot()
 
 (positions_graph %>%
-  filter(organization_code == "CIC") %>%
+    filter(organization_code == "GGS") %>%
   ggraph("igraph", algorithm = "kk") + # other layouts of note: stress tree igraph[algorithm = "nicely"] igraph[algorithm = "sugiyama"] igraph[algorithm = "fr"] igraph[algorithm = "kk"]    
   geom_edge_link(
     arrow = grid::arrow(type = "open", length = unit(9, "points"), angle = 7)
@@ -130,13 +138,15 @@ positions_graph %>%
   geom_point_interactive(aes(
     x = x,
     y = y,
-    tooltip = str_glue("{position_title_english} ({group}-{level})\nPosition ID: {position_number}\nReports to: {supervisors_position_number}"),
+    tooltip = str_glue("{position_title_english} ({group}-{level})\nBra/Dir/Div: {branch_directorate_division}\nPosition ID: {position_number}\nReports to: {supervisors_position_number}\nDirect reports: {reports_direct}\nIndirect reports: {reports_indirect}"),
     color = position_status
   ))
 ) %>%
   girafe(
     ggobj = .,
-    options = list(opts_sizing(rescale = FALSE))
+    options = list(opts_sizing(rescale = FALSE)),
+    width_svg = 8,
+    height_svg = 6
   )
 
 vis_data <- positions_graph %>%
