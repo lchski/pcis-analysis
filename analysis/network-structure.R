@@ -85,9 +85,33 @@ cic_positions_graph <- tbl_graph(
 
 ## analysis
 
+### study a particular organization
 positions_graph %>%
-  select(position_gid, sup_pos_num = supervisor_gid, sup_grp_lvl = supervisors_position_classification_code, position_title_english, reports_direct:ranks_from_top) %>%
+  filter(organization_code == "TBD") %>%
+  select(
+    position_gid,
+    grp_lvl = position_classification_code,
+    position_title_english,
+    sup_pos_gid = supervisor_gid,
+    sup_grp_lvl = supervisors_position_classification_code,
+    reports_direct:last_col()
+  ) %>%
   as_tibble %>% View
+
+### study a position of interest
+positions_graph %>%
+  mutate(distance_to_position_of_interest = node_distance_to(position_gid == "TBD-2986")) %>%
+  filter(position_status == "Occupied") %>%
+  filter(distance_to_position_of_interest != Inf) %>%
+  select(
+    position_gid,
+    grp_lvl = position_classification_code,
+    position_title_english,
+    sup_pos_gid = supervisor_gid,
+    sup_grp_lvl = supervisors_position_classification_code,
+    reports_direct:last_col()
+  ) %>%
+  as_tibble %>% View()
 
 
 ## visualization
