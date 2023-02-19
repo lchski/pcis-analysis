@@ -14,6 +14,7 @@ position_nodes_raw <- positions %>%
   )
 
 # NB: we do this to fill in the graph, but it's arguably relevant in other analyses and could go to `load.R`, even if missing various data
+# TODO: don't create positions with ID 0 (and 1?)? they're placeholder anyway, usually? (but sometimes—rarely—may be linking different trees?)
 inferred_position_nodes <- position_nodes_raw %>%
   select(# TODO: left_join pay_max for the inferred positions
     supervisor_gid,
@@ -150,7 +151,7 @@ positions_graph %>%
     sup_pos_gid = supervisor_gid,
     sup_grp_lvl = supervisors_position_classification_code,
     position_status,
-    reports_direct:last_col()
+    reports_total:last_col()
   ) %>%
   as_tibble %>% View()
 

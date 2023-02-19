@@ -5,6 +5,7 @@
 - Supervisory responsibilities?
   - Which positions oversee more and less staff (on paper)?
   - Which group / levels are more or less likely to have supervisory responsibilities? How many people supervised (direct and indirect)?
+  - What's the salary correlation to supervising? Do supervisory positions tend to equate to more pay?
   - How many multidisciplinary reporting relationships exist? Does like group tend to report to like group?
 - Org chart? How flat (or not) are different organizations?
 - How do some of these questions break down geographically? How much potential for advancement (higher salaries) exist in the regions, versus the NCR? As individual contributors vs as a supervisor?
@@ -19,6 +20,14 @@ NB: For most, probably best to focus on "Occupied" positions only—as many "Vac
 
 ...cleaning todos:
 - remap CS as IT
+- import manual index of missing positions (and recompute supervisor group / level for is.na(supervisors_position_classification_code) ??)
+
+...explorer ideas:
+- pick a department:
+  - "there are X supervisors at {dep}. the average supervisor oversees X directly, Y indirectly, for a total of Z. in dollar figures* (*max of salary range for classification), that's $Y"
+  - "EC-07s at {dep} oversee ..."
+- pick a classification:
+  - "{grp} works with... oversees... tends to be at this level... regions vs not... in this department / type of department / size of department..."
 
 Observations / thoughts:
 - # reports and $ of reports is less accurate the higher up you go, because of broken links; also especially true for some orgs with numerous broken links, e.g., RCMP and DND
