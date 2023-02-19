@@ -100,6 +100,8 @@ system.time({
       supervised_salary_indirect = supervised_salary_total - supervised_salary_direct
     )
 })
+# positions_graph_with_pay %>% write_rds("data/out/positions-graph-pay.RDS")
+# positions_graph_with_pay <- read_rds("data/out/positions-graph-pay.RDS")
 
 positions_graph <- positions_graph_raw %>%
   graph_join(

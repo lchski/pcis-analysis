@@ -22,7 +22,7 @@ NB: For most, probably best to focus on "Occupied" positions only—as many "Vac
 
 Observations / thoughts:
 - # reports and $ of reports is less accurate the higher up you go, because of broken links; also especially true for some orgs with numerous broken links, e.g., RCMP and DND
-- NB re: salary counts: based on 2019 data (definitely not up to date!), uses highest salary, doesn't differentiate occupied vs unoccupied
+- NB re: salary counts: based on 2019 data (definitely not up to date!), uses highest salary, doesn't differentiate occupied vs unoccupied, missing salary data for ~5% of positions (some don't have data for yet, others just mismatch in group labels)
 
 ## Source ATI requests
 
