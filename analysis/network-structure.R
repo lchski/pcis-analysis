@@ -111,6 +111,33 @@ positions_graph <- positions_graph_raw %>%
 
 
 
+### say you've identified missing positions for an org: this is how to selectively rebuild and reload the pay reporting data accounting for changes to that org
+positions_graph_with_pay_for_org <- positions_graph_raw %>%
+  filter(organization_code == "PCO") %>%
+  select(position_gid, pay_max) %>%
+  activate(edges) %>%
+  select(from, to) %>%
+  activate(nodes) %>%
+  mutate(
+    supervised_salary_total = map_local_dbl(order = nrow(position_nodes), mindist = 1, mode = "in", .f = function(neighborhood, ...) {
+      sum(as_tibble(neighborhood, active = "nodes")$pay_max, na.rm = TRUE)
+    }),
+    supervised_salary_direct = map_local_dbl(mindist = 1, mode = "in", .f = function(neighborhood, ...) {
+      sum(as_tibble(neighborhood, active = "nodes")$pay_max, na.rm = TRUE)
+    }),
+    supervised_salary_indirect = supervised_salary_total - supervised_salary_direct
+  )
+
+positions_graph_with_pay_sub_org <- positions_graph_with_pay %>%
+  filter(! str_detect(position_gid, "^PCO")) %>%
+  bind_graphs(positions_graph_with_pay_for_org)
+
+positions_graph <- positions_graph_raw %>%
+  graph_join(
+    positions_graph_with_pay_sub_org %>% activate(edges) %>% filter(from == 0) %>% activate(nodes)
+  )
+
+
 ## exploration
 
 ### understand how many different trees there are in an org
@@ -174,6 +201,22 @@ positions_graph %>%
   ) %>%
   mutate(across(where(is.numeric), ~ round(.x, 1))) %>%
   arrange(grp_lvl)
+
+### salary aggregate
+positions_graph %>% select(
+  position_gid,
+  grp_lvl = position_classification_code,
+  branch_directorate_division,
+  position_title_english,
+  sup_pos_gid = supervisor_gid,
+  sup_grp_lvl = supervisors_position_classification_code,
+  position_status,
+  reports_total:last_col()
+) %>%
+  as_tibble %>%
+  slice_max(supervised_salary_total, n = 1500) %>%
+  mutate(salary_total_rank = row_number()) %>%
+  View
 
 ### accuracy of supervisory factor code, vs classified org chart?
 ### verdict: `supervisory_factor_code` seems barely used

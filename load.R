@@ -40,6 +40,8 @@ positions_raw <- read_excel("data/source/ati-tbs/A-2022-01431 records.xlsx") %>%
     )
   )
 
+positions_raw %>% write_parquet("data/out/positions-raw.parquet")
+
 
 organization_codes <- read_excel("data/source/ati-tbs/A-2022-01430 Database schema of the Position Classification Information System.xlsx", range = "Legend!A10:A78", col_names = c("legend")) %>%
   separate(legend, c("organization_code", "organization"), sep = " - ", extra = "merge")
@@ -75,8 +77,16 @@ noc_2021 <- read_excel("data/source/ati-tbs/A-2022-01430 Database schema of the 
 
 source("load/pay.R")
 
+known_missing_positions <- read_csv("data/indexes/missing-positions.csv") %>%
+  filter(! str_detect(position_title_english, fixed("?"))) %>%
+  select(-comments) %>%
+  separate(position_gid, into = c("organization_code", "position_number"), remove = FALSE) %>%
+  extract(supervisor_gid, into = c("supervisors_position_number"), regex = "([0-9]+)", remove = FALSE) %>%
+  select(-position_gid, -supervisor_gid)
+
 positions <- positions_raw %>%
   select(-degree_1:-points_16) %>% # TODO: recode various fields based on A-2021-00256 legend
+  bind_rows(known_missing_positions) %>%
   left_join(organization_codes) %>%
   mutate(
     position_status = str_replace_all(position_status, position_statuses %>% deframe)

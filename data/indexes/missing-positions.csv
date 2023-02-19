@@ -5,9 +5,9 @@ PCO-213829   ,"Deputy Secretary to the Cabinet, Governance"                     
 PCO-213570   ,"Deputy Secretary to the Cabinet, Operations"                                  ,DM-1                        ,PCO-213564     ,
 PCO-213571   ,"Deputy Secretary to the Cabinet, Plans and Consultations"                     ,DM-1                        ,PCO-213564     ,"same person, based on reports, seems to be the DS Cab portion; currently a DM-2 because combined"
 PCO-325899   ,"Deputy Minister, Intergovernmental Affairs"                                   ,DM-1                        ,PCO-213564     ,"same person, based on reports, seems to be the DM IGA portion, plus a bit of DS Cab; currently a DM-2 because combined"
-PCO-213564   ,"Clerk of the Privy Council and Secretary to the Cabinet"                      ,DM-4                        ,               ,"assume Clerk because CoS is an EX-03, while CoS for PCO-213566 is an EX-02"
+PCO-213564   ,"Clerk of the Privy Council and Secretary to the Cabinet"                      ,DM-4                        ,PCO-0          ,"assume Clerk because CoS is an EX-03, while CoS for PCO-213566 is an EX-02"
 PCO-1132     ,??
 PCO-213566   ,"Deputy Clerk of the Privy Council and Associate Secretary to the Cabinet"     ,DM-3                        ,PCO-213564     ,
 PCO-324807   ,"Deputy Secretary to the Cabinet, Results and Delivery"                        ,DM-2                        ,PCO-325899     ,"seems defunct, assign to PCO-325899 because it houses RDU"
-PCO-325651   ,"Unknown (assumed Asst Secr Cabinet FDPA Policy)"                              ,EX-04                        ,PCO-218821     ,"best guess"
+PCO-325651   ,"Unknown (assumed Asst Secr Cabinet FDPA Policy)"                              ,EX-04                        ,PCO-218821    ,"best guess"
 PCO-350787   ,"Deputy Secretary to the Cabinet, Emergency Preparedness and COVID Recovery"   ,DM-1                        ,PCO-213565     ,"seems roughly right based on GEDS"
