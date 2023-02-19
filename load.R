@@ -78,7 +78,7 @@ noc_2021 <- read_excel("data/source/ati-tbs/A-2022-01430 Database schema of the 
 source("load/pay.R")
 
 known_missing_positions <- read_csv("data/indexes/missing-positions.csv") %>%
-  filter(! str_detect(position_title_english, fixed("?"))) %>%
+  filter(! str_detect(position_title_english, fixed("?"))) %>% # removes missing positions that we're not bothering with
   select(-comments) %>%
   separate(position_gid, into = c("organization_code", "position_number"), remove = FALSE) %>%
   extract(supervisor_gid, into = c("supervisors_position_number"), regex = "([0-9]+)", remove = FALSE) %>%
