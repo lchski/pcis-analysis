@@ -84,7 +84,18 @@ known_missing_positions <- read_csv("data/indexes/missing-positions.csv") %>%
   extract(supervisor_gid, into = c("supervisors_position_number"), regex = "([0-9]+)", remove = FALSE) %>%
   select(-position_gid, -supervisor_gid)
 
+corrections_supervisor <- read_csv("data/indexes/supervisor-corrections.csv") %>%
+  select(-comments) %>%
+  mutate(across(everything(), as.character)) %>%
+  mutate(tmp_index = as.integer(tmp_index))
+
 positions <- positions_raw %>%
+  mutate(tmp_index = row_number()) %>%
+  rows_update(
+    corrections_supervisor,
+    by = c("organization_code", "position_number", "tmp_index")
+  ) %>%
+  select(-tmp_index) %>%
   select(-degree_1:-points_16) %>% # TODO: recode various fields based on A-2021-00256 legend
   bind_rows(known_missing_positions) %>%
   left_join(organization_codes) %>%

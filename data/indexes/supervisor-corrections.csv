@@ -1,0 +1,5 @@
+organization_code,position_number,tmp_index,supervisors_position_number,supervisors_position_classification_code,comments
+TBD,215647,385841,7083,DM   02,reports to missing position 326677 assumed should be CHRO 7083
+TBD,215891,385738,216507,EX   03,reports to missing position 350533 but should be 216507
+TBD,11429,385736,216507,EX   03,reports to missing position 350533 but should be 216507
+TBD,7914,385595,216507,EX   03,reports to missing position 350533 but should be 216507
