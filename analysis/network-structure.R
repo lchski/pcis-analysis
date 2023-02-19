@@ -15,7 +15,7 @@ position_nodes_raw <- positions %>%
 
 # NB: we do this to fill in the graph, but it's arguably relevant in other analyses and could go to `load.R`, even if missing various data
 inferred_position_nodes <- position_nodes_raw %>%
-  select(
+  select(# TODO: left_join pay_max for the inferred positions
     supervisor_gid,
     supervisors_position_number,
     supervisors_position_classification_code,
@@ -23,7 +23,7 @@ inferred_position_nodes <- position_nodes_raw %>%
     supervisor_level,
     organization_code,
     organization,
-    branch_directorate_division # TBD if there are any other fields we could include—even this is maybe a stretch (wewe )
+    branch_directorate_division # TBD if there are any other fields we could include—even this is maybe a stretch
   ) %>%
   anti_join(
     position_nodes_raw %>%
@@ -41,7 +41,7 @@ inferred_position_nodes <- position_nodes_raw %>%
     group = supervisor_group,
     level = supervisor_level
   ) %>%
-  distinct(position_gid, .keep_all = TRUE)
+  distinct(position_gid, .keep_all = TRUE) # TODO: consider sorting by -pay_max prior to this (maybe include for sort, then drop), so we get the branch of the _most senior_ person reporting to this role
 
 position_nodes <- position_nodes_raw %>%
   bind_rows(inferred_position_nodes) %>%
@@ -69,7 +69,7 @@ position_edges <- position_nodes %>%
     by = c("supervisor_gid" = "position_gid")
   )
 
-positions_graph <- tbl_graph(
+positions_graph_raw <- tbl_graph(
   nodes = position_nodes,
   edges = position_edges %>%
     filter(! is.na(from) & ! is.na(to))
@@ -79,9 +79,33 @@ positions_graph <- tbl_graph(
     reports_direct = local_size(mindist = 1, mode = "in"),
     reports_indirect = reports_total - reports_direct,
     ranks_from_top = node_eccentricity(mode = "out"),
-    is_supervisor = reports_total > 0,
-    is_isolated = node_is_isolated() # TODO: replace this? it's basically `ranks_from_top == 0` that interests us, maybe we just drop
+    is_supervisor = reports_total > 0
   )
+
+## NB: VERY expensive operation (maps over the connected nodes for every node), consider parallelizing by department or something
+system.time({
+  positions_graph_with_pay <- positions_graph_raw %>%
+    # filter(organization_code == "GSS") %>%
+    select(position_gid, pay_max) %>%
+    activate(edges) %>%
+    select(from, to) %>%
+    activate(nodes) %>%
+    mutate(
+      supervised_salary_total = map_local_dbl(order = nrow(position_nodes), mindist = 1, mode = "in", .f = function(neighborhood, ...) {
+        sum(as_tibble(neighborhood, active = "nodes")$pay_max, na.rm = TRUE)
+      }),
+      supervised_salary_direct = map_local_dbl(mindist = 1, mode = "in", .f = function(neighborhood, ...) {
+        sum(as_tibble(neighborhood, active = "nodes")$pay_max, na.rm = TRUE)
+      }),
+      supervised_salary_indirect = supervised_salary_total - supervised_salary_direct
+    )
+})
+
+positions_graph <- positions_graph_raw %>%
+  graph_join(
+    positions_graph_with_pay %>% activate(edges) %>% filter(from == 0) %>% activate(nodes)
+  )
+
 
 
 ## exploration
@@ -133,7 +157,7 @@ positions_graph %>%
   as_tibble %>%
   group_by(
     # is_central_agency = organization_code %in% c("PCO", "TBD", "FIN"), # or other axis of interest, e.g., NCR vs not
-    is_ncr = work_location_english %in% c("Ottawa", "Gatineau"),
+    is_ncr = work_location_english %in% c("Ottawa", "Gatineau", "Hull"),
     grp_lvl = position_classification_code
   ) %>%
   summarize(
@@ -160,6 +184,7 @@ positions_graph %>%
   mutate(distance_to_position_of_interest = node_distance_to(position_gid == "TBD-2986")) %>%
   filter(distance_to_position_of_interest != Inf | branch_directorate_division == "Canadian Digital Ser")
 #### what can we observe? that there are clearly some broken links in the chain: sometimes you can go by shared root node, but sometimes there are positions with the same branch/dir/div that are floating
+
 
 
 ## visualization
